@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TradeGrowth V2</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111827;background:#f3f4f6}
+*{box-sizing:border-box}body{margin:0}main{max-width:760px;margin:auto;padding:18px 14px 40px}
+h1{font-size:28px;margin:4px 0 3px}.sub{color:#6b7280;margin:0 0 18px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:16px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+label{font-size:12px;color:#6b7280;display:block;margin-bottom:5px}
+input,select,button{width:100%;min-height:46px;border:1px solid #d1d5db;border-radius:12px;padding:10px;font-size:16px;background:#fff}
+button{font-weight:700;cursor:pointer}.primary{background:#111827;color:#fff;border-color:#111827}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.danger{background:#fff;color:#b91c1c;border-color:#fecaca}
+.stat{padding:13px}.stat small{color:#6b7280}.stat strong{display:block;font-size:21px;margin-top:4px}
+.progress{height:12px;background:#e5e7eb;border-radius:99px;overflow:hidden}.progress span{display:block;height:100%;background:#111827}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center}.green{color:#15803d}.red{color:#b91c1c}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 5px;border-bottom:1px solid #eee;text-align:left;white-space:nowrap}
+.scroll{overflow-x:auto}.pill{font-size:12px;padding:5px 8px;border-radius:999px;background:#f3f4f6}
+.notice{font-size:13px;color:#6b7280;line-height:1.45}
+@media(min-width:600px){.stats{grid-template-columns:repeat(4,1fr)}.grid{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<main>
+<h1>TradeGrowth V2</h1>
+<p class="sub">Journal de trading — cycles, statistiques et progression</p>
+
+<section class="card">
+<div class="row"><strong id="cycleTitle">Cycle #1</strong><span class="pill" id="todayCount">0 / 5 aujourd’hui</span></div>
+<div class="stats" style="margin-top:12px">
+<div class="stat"><small>Solde</small><strong id="balance">$50.00</strong></div>
+<div class="stat"><small>Profit / perte</small><strong id="pnl">$0.00</strong></div>
+<div class="stat"><small>Win rate</small><strong id="winrate">0%</strong></div>
+<div class="stat"><small>Trades</small><strong id="tradeCount">0</strong></div>
+</div>
+<div style="margin-top:14px"><div class="row"><small>Progression vers $1,000</small><strong id="progressText">5.0%</strong></div><div class="progress" style="margin-top:7px"><span id="progressBar" style="width:5%"></span></div></div>
+</section>
+
+<section class="card">
+<strong>Nouveau trade</strong>
+<div class="grid" style="margin-top:12px">
+<div><label>Marché</label><input id="market" value="EUR/USD OTC"></div>
+<div><label>Mise ($)</label><input id="stake" type="number" min=".01" step=".01" value="1"></div>
+<div><label>Payout (%)</label><input id="payout" type="number" min="0" max="100" step=".1" value="92"></div>
+<div><label>Direction</label><select id="direction"><option>CALL</option><option>PUT</option></select></div>
+<div><label>Résultat</label><select id="result"><option value="win">GAGNÉ</option><option value="loss">PERDU</option></select></div>
+<div><label>Note</label><input id="note" placeholder="Ex. signal propre"></div>
+</div>
+<button class="primary" id="add" style="margin-top:10px">+ Enregistrer le trade</button>
+<p class="notice">Maximum prévu : 5 trades par jour. Une perte ne doit pas entraîner automatiquement une augmentation de mise.</p>
+</section>
+
+<section class="card">
+<div class="row"><strong>Objectif du cycle</strong><strong id="goalStatus">5%</strong></div>
+<p class="notice" id="goalText">À $1,000 : objectif de retrait $600 et nouveau cycle avec $400.</p>
+</section>
+
+<section class="card">
+<strong>Statistiques du cycle</strong>
+<div class="stats" style="margin-top:12px">
+<div class="stat"><small>Gagnés</small><strong id="wins">0</strong></div>
+<div class="stat"><small>Perdus</small><strong id="losses">0</strong></div>
+<div class="stat"><small>Meilleure série</small><strong id="bestWin">0</strong></div>
+<div class="stat"><small>Pire série</small><strong id="bestLoss">0</strong></div>
+</div>
+</section>
+
+<section class="card">
+<strong>Historique des trades</strong>
+<div class="scroll">
+<table><thead><tr><th>#</th><th>Heure</th><th>Marché</th><th>Dir.</th><th>Rés.</th><th>Mise</th><th>P/L</th><th>Solde</th></tr></thead>
+<tbody id="history"></tbody></table>
+</div>
+</section>
+
+<section class="card">
+<strong>Cycles précédents</strong>
+<div id="cycles" class="notice" style="margin-top:8px">Aucun cycle terminé.</div>
+</section>
+
+<section class="card">
+<div class="actions">
+<button id="export">Exporter CSV</button>
+<button id="reset" class="danger">Réinitialiser le cycle</button>
+</div>
+<p class="notice">Les données sont conservées localement dans ce navigateur. Si tu changes d'appareil ou effaces les données du site, fais un export CSV pour garder une copie.</p>
+</section>
+</main>
+
+<script>
+(function(){
+const KEY="tradegrowth_v2";
+let state=JSON.parse(localStorage.getItem(KEY)||"null")||{cycle:1,start:50,balance:50,trades:[],completed:[]};
+const $=id=>document.getElementById(id);
+function money(n){return "$"+Number(n).toFixed(2)}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function today(){return new Date().toISOString().slice(0,10)}
+function render(){
+ let wins=state.trades.filter(t=>t.result==="win").length, losses=state.trades.length-wins;
+ let pnl=state.balance-state.start, pct=Math.max(0,Math.min(100,state.balance/1000*100));
+ $("cycleTitle").textContent="Cycle #"+state.cycle;
+ $("balance").textContent=money(state.balance);
+ $("pnl").textContent=(pnl>=0?"+":"")+money(pnl);
+ $("pnl").className=pnl>=0?"green":"red";
+ $("winrate").textContent=(state.trades.length?wins/state.trades.length*100:0).toFixed(1)+"%";
+ $("tradeCount").textContent=state.trades.length;
+ $("wins").textContent=wins; $("losses").textContent=losses;
+ $("progressText").textContent=pct.toFixed(1)+"%"; $("goalStatus").textContent=pct.toFixed(1)+"%";
+ $("progressBar").style.width=pct+"%";
+ const tc=state.trades.filter(t=>t.date===today()).length; $("todayCount").textContent=tc+" / 5 aujourd’hui";
+ let cw=0,cl=0,bw=0,bl=0;
+ state.trades.forEach(t=>{if(t.result==="win"){cw++;cl=0;bw=Math.max(bw,cw)}else{cl++;cw=0;bl=Math.max(bl,cl)}});
+ $("bestWin").textContent=bw;$("bestLoss").textContent=bl;
+ $("goalText").textContent=state.balance>=1000?"OBJECTIF ATTEINT : retire $600, garde $400 et démarre le prochain cycle.":"À $1,000 : objectif de retrait $600 et nouveau cycle avec $400.";
+ const body=$("history");body.innerHTML="";
+ state.trades.slice().reverse().forEach(t=>{let tr=document.createElement("tr");[t.n,t.time,t.market,t.direction,t.result==="win"?"GAGNÉ":"PERDU",money(t.stake), (t.change>=0?"+":"")+money(t.change),money(t.balance)].forEach((v,i)=>{let td=document.createElement("td");td.textContent=v;if(i===4)td.className=t.result==="win"?"green":"red";tr.appendChild(td)});body.appendChild(tr)});
+ $("cycles").innerHTML=state.completed.length?state.completed.map(c=>"Cycle #"+c.cycle+" : départ "+money(c.start)+" → $1,000, retrait $600.").join("<br>"):"Aucun cycle terminé.";
+ save();
+}
+$("add").onclick=function(){
+ const tc=state.trades.filter(t=>t.date===today()).length;if(tc>=5){alert("Limite de 5 trades aujourd'hui atteinte.");return}
+ const stake=parseFloat($("stake").value), payout=parseFloat($("payout").value);
+ if(!Number.isFinite(stake)||stake<=0||!Number.isFinite(payout)||payout<0||payout>100){alert("Vérifie la mise et le payout.");return}
+ if(stake>state.balance){alert("La mise dépasse le solde disponible.");return}
+ const result=$("result").value, change=result==="win"?stake*payout/100:-stake;
+ state.balance+=change;
+ state.trades.push({n:state.trades.length+1,date:today(),time:new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}),market:$("market").value.trim()||"Non précisé",stake,direction:$("direction").value,result,change,balance:state.balance,note:$("note").value.trim()});
+ if(state.balance>=1000){
+   state.completed.push({cycle:state.cycle,start:state.start});
+   state.cycle++; state.start=400; state.balance=400; state.trades=[];
+   alert("Cycle terminé ! $1,000 atteint. Nouveau cycle lancé avec $400 après retrait prévu de $600.");
+ }
+ $("note").value="";render();
+};
+$("reset").onclick=function(){if(confirm("Réinitialiser le cycle actuel ? L'historique de ce cycle sera supprimé de l'app. Pense à exporter CSV avant.")){state.trades=[];state.balance=state.start;render()}};
+$("export").onclick=function(){
+ let lines=["Cycle,No,Date,Heure,Marche,Direction,Resultat,Mise,Payout,GainPerte,Solde,Note"];
+ state.trades.forEach(t=>lines.push([state.cycle,t.n,t.date,t.time,t.market,t.direction,t.result==="win"?"GAGNE":"PERDU",t.stake,$("payout").value,t.change,t.balance,t.note].map(x=>'"'+String(x).replaceAll('"','""')+'"').join(",")));
+ const blob=new Blob([lines.join("\\n")],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="TradeGrowth_Cycle_"+state.cycle+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);
+};
+render();
+})();
+</script>
+</body></html>
